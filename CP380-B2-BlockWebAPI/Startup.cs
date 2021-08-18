@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.IO;
+using CP380_B1_BlockList.Models;
 
 namespace CP380_B2_BlockWebAPI
 {
@@ -31,6 +32,7 @@ namespace CP380_B2_BlockWebAPI
             // TODO:
             //  add singletons
             //  
+            
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -39,6 +41,8 @@ namespace CP380_B2_BlockWebAPI
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
+
+            services.AddSingleton<BlockList>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
