@@ -2,37 +2,39 @@
 using CP380_B2_BlockWebAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CP380_B2_BlockWebAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Produces("application/json")]
     public class PendingPayloadsController : ControllerBase
     {
         // TODO
-        [Route("/PendingPayloads")]
-        [HttpGet]
-        public IActionResult Get()
+        private PendingPayloads _pending;
+        public PendingPayloadsController(PendingPayloads payloads)
         {
-            List<Payload> data = new()
-            {
-                new Payload("user", TransactionTypes.GRANT, 30, null),
-                new Payload("user", TransactionTypes.BUY, 8, "item"),
-            };
-            return Ok(data);
+            _pending = payloads;
         }
 
         [Route("/PendingPayloads")]
-        [HttpPost]
-        public IActionResult Post(string user, TransactionTypes t, int amount, string item)
+        [HttpGet]
+        public string Get()
         {
-            return Ok(new Payload(user, t, amount, item));
+            return JsonConvert.SerializeObject(_pending.Payloads);
+        }
+
+        [Route("/AddPayload")]
+        [HttpPost]
+        public string Post(Payload payload)
+        {
+            _pending.Payloads.Add(payload);
+            return JsonConvert.SerializeObject("Payload Added!");
         }
     }
 }

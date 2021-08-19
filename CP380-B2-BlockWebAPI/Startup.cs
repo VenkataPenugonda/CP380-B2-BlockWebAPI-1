@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.IO;
 using CP380_B1_BlockList.Models;
+using CP380_B2_BlockWebAPI.Models;
+using CP380_B2_BlockWebAPI.Services;
 
 namespace CP380_B2_BlockWebAPI
 {
@@ -28,11 +30,11 @@ namespace CP380_B2_BlockWebAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //
-            // TODO:
-            //  add singletons
-            //  
-            
+
+            services.AddSingleton<BlockList>();
+            services.AddSingleton<PendingPayloads>();
+            services.AddSingleton<BlockListService>();
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -41,8 +43,6 @@ namespace CP380_B2_BlockWebAPI
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
-
-            services.AddSingleton<BlockList>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

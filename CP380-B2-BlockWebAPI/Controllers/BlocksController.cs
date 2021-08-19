@@ -1,23 +1,25 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CP380_B1_BlockList.Models;
+using CP380_B2_BlockWebAPI.Models;
+using CP380_B2_BlockWebAPI.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CP380_B1_BlockList.Models;
-using CP380_B2_BlockWebAPI.Models;
 
 namespace CP380_B2_BlockWebAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Produces("application/json")]
     public class BlocksController : ControllerBase
     {
-        private readonly BlockList _blocklist;
-        public BlocksController(BlockList block)
+        private readonly BlockList blocklist;
+        public BlocksController(BlockList blockList)
         {
-            _blocklist = block;
+            blocklist = blockList;
         }
 
         /// <summary>
@@ -25,21 +27,15 @@ namespace CP380_B2_BlockWebAPI.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("/Blocks")]
-        [HttpGet]        
-        public IActionResult Get()
+        [HttpGet]
+        public string Get()
         {
-            DateTime dt = DateTime.Now;
-            var objBlock = new Block(dt, null, new List<Payload>());
-            var result = new List<BlockSummary>()
+            return JsonConvert.SerializeObject(blocklist.Chain.Select(block => new BlockSummary()
             {
-                new BlockSummary()
-                {
-                    Hash = objBlock.Hash,
-                    PreviousHash = objBlock.PreviousHash,
-                    TimeStamp = objBlock.TimeStamp
-                }
-            };
-            return Ok(result);
+                TimeStamp = block.TimeStamp,
+                PreviousHash = block.PreviousHash,
+                Hash = block.Hash
+            }));
         }
 
         /// <summary>
@@ -48,12 +44,22 @@ namespace CP380_B2_BlockWebAPI.Controllers
         /// <returns></returns>
         [Route("/Blocks/{hash}")]
         [HttpGet]
-        public IActionResult GetHash(string hash)
+        public string GetHash(string hash)
         {
-            DateTime dt = DateTime.Now;
-            var objBlock = new Block(dt, null, new List<Payload>());
-            objBlock.Hash = hash;
-            return Ok(objBlock);
+            var obj = blocklist.Chain
+                .Where(block => block.Hash.Equals(hash));
+
+            if (obj != null && obj.Count() > 0)
+            {
+                return JsonConvert.SerializeObject(obj.Select(block => new BlockSummary()
+                    {
+                        Hash = block.Hash,
+                        PreviousHash = block.PreviousHash,
+                        TimeStamp = block.TimeStamp
+                    }).First());
+            }
+
+            return JsonConvert.SerializeObject(NotFound());
         }
 
         /// <summary>
@@ -62,12 +68,39 @@ namespace CP380_B2_BlockWebAPI.Controllers
         /// <returns></returns>
         [Route("/Blocks/{hash}/Payloads")]
         [HttpGet]
-        public IActionResult GetPayload(string hash)
+        public string GetAllPayloads(string hash)
         {
-            DateTime dt = DateTime.Now;
-            var objBlock = new Block(dt, null, new List<Payload>());
-            objBlock.Hash = hash;
-            return Ok(objBlock.Data);
+            var obj = blocklist.Chain
+                        .Where(block => block.Hash.Equals(hash));
+
+            if (obj != null && obj.Count() > 0)
+            {
+                return JsonConvert.SerializeObject(obj
+                    .Select(block => block.Data).First());
+            }
+
+            return JsonConvert.SerializeObject(NotFound());
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
+        [Route("/Blocks")]
+        [HttpPost]
+        public string Post(Block block)
+        {
+            BlockListService _blocklist = new();
+            Block obj = _blocklist.SubmitNewBlock(block.Hash, block.Nonce, block.TimeStamp);
+            if(obj != null)
+            {
+                return JsonConvert.SerializeObject(obj);
+            }
+            else
+            {
+                return "401 Bad request";
+            }
         }
     }
 }
